@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="mn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Od Catcher - Browser Deer Togloh Togloom</title>
+    <meta
+      name="description"
+      content="Od Catcher bol browser deer togloh jijig togloom. Od tsugluulj, soliroos bultaj onoo avna."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="Od Catcher" />
+    <meta
+      property="og:description"
+      content="Browser deer shuud togloh od tsugluulah jijig togloom."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game-page">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Od Catcher">
+          <span class="brand-mark">OC</span>
+          <span>Od Catcher</span>
+        </a>
+        <div class="hud" aria-label="Game stats">
+          <span>Оноо <strong id="score">0</strong></span>
+          <span>Level <strong id="level">1</strong></span>
+          <span>Амь <strong id="lives">3</strong></span>
+        </div>
+      </header>
+
+      <section class="game-layout" aria-label="Od Catcher game">
+        <div class="stage-shell">
+          <canvas
+            id="gameCanvas"
+            width="960"
+            height="600"
+            aria-label="Od Catcher тоглоомын талбар"
+          ></canvas>
+
+          <div class="start-panel" id="startPanel">
+            <p class="kicker">Browser game</p>
+            <h1>Od Catcher</h1>
+            <p>Унаж буй оддыг цуглуулаад солируудаас бултаарай.</p>
+            <button class="primary-action" id="startButton" type="button">Start</button>
+          </div>
+        </div>
+
+        <aside class="side-panel" aria-label="Game details">
+          <div class="metric">
+            <span>Дээд оноо</span>
+            <strong id="bestScore">0</strong>
+          </div>
+          <div class="metric">
+            <span>Комбо</span>
+            <strong id="combo">0</strong>
+          </div>
+          <div class="meter" aria-label="Level progress">
+            <span id="progressLabel">Дараагийн level: 10</span>
+            <div><i id="progressBar"></i></div>
+          </div>
+          <div class="actions">
+            <button id="pauseButton" type="button">Pause</button>
+            <button id="restartButton" type="button">Restart</button>
+          </div>
+        </aside>
+      </section>
+
+      <section class="touch-controls" aria-label="Touch controls">
+        <button class="control" data-move="-1" type="button" aria-label="Move left">&larr;</button>
+        <button class="control pause-control" id="touchPause" type="button" aria-label="Pause">||</button>
+        <button class="control" data-move="1" type="button" aria-label="Move right">&rarr;</button>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
