@@ -24,6 +24,12 @@ const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const keys = new Set();
 const leaderboardKey = "od-catcher-leaderboard";
+const SUPABASE_URL = "https://afzajceejxvqksrgrzvj.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_W0ZkOmwnIj0vzGUazDn0Rw_IFboFy0m";
+const onlineLeaderboard =
+  SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
 let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || "[]");
 let bestScore = Number(localStorage.getItem("od-catcher-best") || 0);
@@ -96,7 +102,38 @@ function renderLeaderboard() {
   }
 }
 
-function saveLeaderboardScore(name, score) {
+async function loadLeaderboard() {
+  if (!onlineLeaderboard) {
+    renderLeaderboard();
+    return;
+  }
+
+  const { data, error } = await onlineLeaderboard
+    .from("scores")
+    .select("name, score")
+    .order("score", { ascending: false })
+    .limit(5);
+
+  if (error) {
+    console.error("Leaderboard load failed:", error.message);
+    renderLeaderboard();
+    return;
+  }
+
+  leaderboard = data || [];
+  renderLeaderboard();
+}
+
+async function saveLeaderboardScore(name, score) {
+  if (onlineLeaderboard) {
+    const { error } = await onlineLeaderboard.from("scores").insert({ name, score });
+    if (error) {
+      console.error("Leaderboard save failed:", error.message);
+    }
+    await loadLeaderboard();
+    return;
+  }
+
   leaderboard.push({ name, score });
   leaderboard.sort((a, b) => b.score - a.score);
   leaderboard = leaderboard.slice(0, 5);
@@ -111,9 +148,9 @@ function openScoreDialog() {
   playerNameInput.select();
 }
 
-function closeScoreDialog() {
+async function closeScoreDialog() {
   const name = playerNameInput.value.trim().slice(0, 16) || "Player";
-  saveLeaderboardScore(name, state.score);
+  await saveLeaderboardScore(name, state.score);
   scoreDialog.hidden = true;
 }
 
@@ -463,5 +500,5 @@ for (const button of moveButtons) {
 
 createBackdrop();
 updateHud();
-renderLeaderboard();
+loadLeaderboard();
 requestAnimationFrame(loop);
