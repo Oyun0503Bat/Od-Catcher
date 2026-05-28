@@ -9,6 +9,10 @@ const comboEl = document.querySelector("#combo");
 const progressBar = document.querySelector("#progressBar");
 const progressLabel = document.querySelector("#progressLabel");
 const leaderboardList = document.querySelector("#leaderboardList");
+const scoreDialog = document.querySelector("#scoreDialog");
+const finalScoreText = document.querySelector("#finalScoreText");
+const playerNameInput = document.querySelector("#playerNameInput");
+const saveScoreButton = document.querySelector("#saveScoreButton");
 const startPanel = document.querySelector("#startPanel");
 const startButton = document.querySelector("#startButton");
 const pauseButton = document.querySelector("#pauseButton");
@@ -92,19 +96,25 @@ function renderLeaderboard() {
   }
 }
 
-function saveLeaderboardScore() {
-  if (state.score <= 0) {
-    return;
-  }
-
-  const typedName = prompt("Leaderboard-д нэрээ бичнэ үү:", "Player");
-  const name = (typedName || "Player").trim().slice(0, 16) || "Player";
-
-  leaderboard.push({ name, score: state.score });
+function saveLeaderboardScore(name, score) {
+  leaderboard.push({ name, score });
   leaderboard.sort((a, b) => b.score - a.score);
   leaderboard = leaderboard.slice(0, 5);
   localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
   renderLeaderboard();
+}
+
+function openScoreDialog() {
+  finalScoreText.textContent = `Чиний оноо: ${state.score}`;
+  scoreDialog.hidden = false;
+  playerNameInput.focus();
+  playerNameInput.select();
+}
+
+function closeScoreDialog() {
+  const name = playerNameInput.value.trim().slice(0, 16) || "Player";
+  saveLeaderboardScore(name, state.score);
+  scoreDialog.hidden = true;
 }
 
 function createBackdrop() {
@@ -241,12 +251,12 @@ function endGame() {
   paused = false;
   bestScore = Math.max(bestScore, state.score);
   localStorage.setItem("od-catcher-best", String(bestScore));
-  saveLeaderboardScore();
   updateHud();
   startButton.textContent = "Again";
   startPanel.querySelector("p:not(.kicker)").textContent =
     `Тоглоом дууслаа. Чиний оноо: ${state.score}.`;
   startPanel.classList.remove("is-hidden");
+  openScoreDialog();
 }
 
 function draw() {
@@ -419,6 +429,13 @@ startButton.addEventListener("click", startGame);
 restartButton.addEventListener("click", startGame);
 pauseButton.addEventListener("click", togglePause);
 touchPause.addEventListener("click", togglePause);
+saveScoreButton.addEventListener("click", closeScoreDialog);
+
+playerNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    closeScoreDialog();
+  }
+});
 
 window.addEventListener("keydown", (event) => {
   keys.add(event.key);

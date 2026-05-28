@@ -286,10 +286,62 @@ h1 {
   background: var(--coral);
 }
 
-.touch-controls {
+.touch-controls,
+.score-dialog {
   display: none;
   justify-content: center;
   gap: 12px;
+}
+
+.score-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  align-items: center;
+  padding: 20px;
+  background: rgba(16, 21, 16, 0.72);
+}
+
+.score-dialog:not([hidden]) {
+  display: flex;
+}
+
+.score-box {
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px;
+  color: var(--cream);
+  background: #182018;
+  box-shadow: var(--shadow);
+}
+
+.score-box h2 {
+  margin: 0 0 10px;
+  font-size: 1.45rem;
+}
+
+.score-box p:not(.kicker) {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.score-box label {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.score-box input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--cream);
+  font: inherit;
 }
 
 .control {

@@ -79,6 +79,19 @@
         <button class="control pause-control" id="touchPause" type="button" aria-label="Pause">||</button>
         <button class="control" data-move="1" type="button" aria-label="Move right">&rarr;</button>
       </section>
+
+      <div class="score-dialog" id="scoreDialog" hidden>
+        <div class="score-box" role="dialog" aria-modal="true" aria-labelledby="scoreTitle">
+          <p class="kicker">Game over</p>
+          <h2 id="scoreTitle">Leaderboard-д нэрээ оруул</h2>
+          <p id="finalScoreText">Чиний оноо: 0</p>
+          <label>
+            Нэр
+            <input id="playerNameInput" maxlength="16" type="text" value="Player" />
+          </label>
+          <button class="primary-action" id="saveScoreButton" type="button">Save score</button>
+        </div>
+      </div>
     </main>
 
     <script src="script.js"></script>
