@@ -33,6 +33,7 @@ body {
 button,
 canvas {
   font: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
@@ -293,6 +294,13 @@ h1 {
   gap: 12px;
 }
 
+.touch-controls {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .score-dialog {
   position: fixed;
   inset: 0;
@@ -354,6 +362,10 @@ h1 {
   background: var(--panel);
   font-size: 1.25rem;
   font-weight: 900;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .pause-control {
