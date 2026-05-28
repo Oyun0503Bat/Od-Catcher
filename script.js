@@ -492,8 +492,16 @@ window.addEventListener("keyup", (event) => {
 
 for (const button of moveButtons) {
   const value = button.dataset.move === "1" ? "ArrowRight" : "ArrowLeft";
-  button.addEventListener("pointerdown", () => keys.add(value));
-  button.addEventListener("pointerup", () => keys.delete(value));
+  button.addEventListener("contextmenu", (event) => event.preventDefault());
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+    keys.add(value);
+  });
+  button.addEventListener("pointerup", (event) => {
+    event.preventDefault();
+    keys.delete(value);
+  });
   button.addEventListener("pointercancel", () => keys.delete(value));
   button.addEventListener("pointerleave", () => keys.delete(value));
 }
