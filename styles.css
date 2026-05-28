@@ -93,6 +93,7 @@ button {
 .hud span,
 .metric,
 .meter,
+.leaderboard,
 .actions button {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -212,7 +213,8 @@ h1 {
 }
 
 .metric,
-.meter {
+.meter,
+.leaderboard {
   padding: 16px;
 }
 
@@ -244,6 +246,24 @@ h1 {
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--teal), var(--gold), var(--coral));
+}
+
+.leaderboard h2 {
+  margin: 0 0 12px;
+  color: var(--gold);
+  font-size: 0.95rem;
+}
+
+.leaderboard ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.leaderboard li {
+  color: var(--cream);
+  font-size: 0.92rem;
 }
 
 .actions {
@@ -320,6 +340,7 @@ h1 {
   }
 
   .meter,
+  .leaderboard,
   .actions {
     grid-column: 1 / -1;
   }
@@ -347,7 +368,8 @@ h1 {
   }
 
   .metric,
-  .meter {
+  .meter,
+  .leaderboard {
     padding: 13px;
   }
 

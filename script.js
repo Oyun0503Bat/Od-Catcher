@@ -8,6 +8,7 @@ const bestScoreEl = document.querySelector("#bestScore");
 const comboEl = document.querySelector("#combo");
 const progressBar = document.querySelector("#progressBar");
 const progressLabel = document.querySelector("#progressLabel");
+const leaderboardList = document.querySelector("#leaderboardList");
 const startPanel = document.querySelector("#startPanel");
 const startButton = document.querySelector("#startButton");
 const pauseButton = document.querySelector("#pauseButton");
@@ -18,7 +19,9 @@ const moveButtons = document.querySelectorAll("[data-move]");
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const keys = new Set();
+const leaderboardKey = "od-catcher-leaderboard";
 
+let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || "[]");
 let bestScore = Number(localStorage.getItem("od-catcher-best") || 0);
 let running = false;
 let paused = false;
@@ -70,6 +73,38 @@ function updateHud() {
   const progress = (state.score - previousLevel) / (nextLevel - previousLevel);
   progressBar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
   progressLabel.textContent = `Дараагийн level: ${Math.max(0, nextLevel - state.score)}`;
+}
+
+function renderLeaderboard() {
+  leaderboardList.innerHTML = "";
+
+  if (leaderboard.length === 0) {
+    const empty = document.createElement("li");
+    empty.textContent = "Одоогоор оноо алга";
+    leaderboardList.append(empty);
+    return;
+  }
+
+  for (const entry of leaderboard.slice(0, 5)) {
+    const item = document.createElement("li");
+    item.textContent = `${entry.name} - ${entry.score}`;
+    leaderboardList.append(item);
+  }
+}
+
+function saveLeaderboardScore() {
+  if (state.score <= 0) {
+    return;
+  }
+
+  const typedName = prompt("Leaderboard-д нэрээ бичнэ үү:", "Player");
+  const name = (typedName || "Player").trim().slice(0, 16) || "Player";
+
+  leaderboard.push({ name, score: state.score });
+  leaderboard.sort((a, b) => b.score - a.score);
+  leaderboard = leaderboard.slice(0, 5);
+  localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+  renderLeaderboard();
 }
 
 function createBackdrop() {
@@ -206,6 +241,7 @@ function endGame() {
   paused = false;
   bestScore = Math.max(bestScore, state.score);
   localStorage.setItem("od-catcher-best", String(bestScore));
+  saveLeaderboardScore();
   updateHud();
   startButton.textContent = "Again";
   startPanel.querySelector("p:not(.kicker)").textContent =
@@ -410,4 +446,5 @@ for (const button of moveButtons) {
 
 createBackdrop();
 updateHud();
+renderLeaderboard();
 requestAnimationFrame(loop);
