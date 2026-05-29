@@ -80,16 +80,16 @@
         <button class="control" data-move="1" type="button" aria-label="Move right">&rarr;</button>
       </section>
 
-      <div class="score-dialog" id="scoreDialog" hidden>
-        <div class="score-box" role="dialog" aria-modal="true" aria-labelledby="scoreTitle">
-          <p class="kicker">Game over</p>
-          <h2 id="scoreTitle">Leaderboard-д нэрээ оруул</h2>
-          <p id="finalScoreText">Чиний оноо: 0</p>
+      <div class="score-dialog" id="nameDialog" hidden>
+        <div class="score-box" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+          <p class="kicker">Player name</p>
+          <h2 id="nameTitle">Тоглох нэрээ оруул</h2>
+          <p id="nameDialogText">Энэ нэрээр leaderboard дээр оноо хадгалагдана.</p>
           <label>
             Нэр
             <input id="playerNameInput" maxlength="16" type="text" value="Player" />
           </label>
-          <button class="primary-action" id="saveScoreButton" type="button">Save score</button>
+          <button class="primary-action" id="saveNameButton" type="button">Start game</button>
         </div>
       </div>
     </main>

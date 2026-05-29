@@ -9,10 +9,10 @@ const comboEl = document.querySelector("#combo");
 const progressBar = document.querySelector("#progressBar");
 const progressLabel = document.querySelector("#progressLabel");
 const leaderboardList = document.querySelector("#leaderboardList");
-const scoreDialog = document.querySelector("#scoreDialog");
-const finalScoreText = document.querySelector("#finalScoreText");
+const nameDialog = document.querySelector("#nameDialog");
+const nameDialogText = document.querySelector("#nameDialogText");
 const playerNameInput = document.querySelector("#playerNameInput");
-const saveScoreButton = document.querySelector("#saveScoreButton");
+const saveNameButton = document.querySelector("#saveNameButton");
 const startPanel = document.querySelector("#startPanel");
 const startButton = document.querySelector("#startButton");
 const pauseButton = document.querySelector("#pauseButton");
@@ -24,6 +24,7 @@ const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const keys = new Set();
 const leaderboardKey = "od-catcher-leaderboard";
+const playerNameKey = "od-catcher-player-name";
 const SUPABASE_URL = "https://afzajceejxvqksrgrzvj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_W0ZkOmwnIj0vzGUazDn0Rw_IFboFy0m";
 const onlineLeaderboard =
@@ -32,6 +33,7 @@ const onlineLeaderboard =
     : null;
 
 let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || "[]");
+let playerName = localStorage.getItem(playerNameKey) || "";
 let bestScore = Number(localStorage.getItem("od-catcher-best") || 0);
 let running = false;
 let paused = false;
@@ -125,8 +127,18 @@ async function loadLeaderboard() {
 }
 
 async function saveLeaderboardScore(name, score) {
+  const currentEntry = leaderboard.find(
+    (entry) => entry.name.toLowerCase() === name.toLowerCase(),
+  );
+
+  if (currentEntry && score <= currentEntry.score) {
+    return;
+  }
+
   if (onlineLeaderboard) {
-    const { error } = await onlineLeaderboard.from("scores").insert({ name, score });
+    const { error } = await onlineLeaderboard
+      .from("scores")
+      .upsert({ name, score }, { onConflict: "name" });
     if (error) {
       console.error("Leaderboard save failed:", error.message);
     }
@@ -134,6 +146,9 @@ async function saveLeaderboardScore(name, score) {
     return;
   }
 
+  leaderboard = leaderboard.filter(
+    (entry) => entry.name.toLowerCase() !== name.toLowerCase(),
+  );
   leaderboard.push({ name, score });
   leaderboard.sort((a, b) => b.score - a.score);
   leaderboard = leaderboard.slice(0, 5);
@@ -141,17 +156,20 @@ async function saveLeaderboardScore(name, score) {
   renderLeaderboard();
 }
 
-function openScoreDialog() {
-  finalScoreText.textContent = `Чиний оноо: ${state.score}`;
-  scoreDialog.hidden = false;
+function openNameDialog(message = "Энэ нэрээр leaderboard дээр оноо хадгалагдана.") {
+  nameDialogText.textContent = message;
+  playerNameInput.value = playerName || "Player";
+  nameDialog.hidden = false;
   playerNameInput.focus();
   playerNameInput.select();
 }
 
-async function closeScoreDialog() {
+function closeNameDialog() {
   const name = playerNameInput.value.trim().slice(0, 16) || "Player";
-  await saveLeaderboardScore(name, state.score);
-  scoreDialog.hidden = true;
+  playerName = name;
+  localStorage.setItem(playerNameKey, playerName);
+  nameDialog.hidden = true;
+  startGame();
 }
 
 function createBackdrop() {
@@ -288,12 +306,12 @@ function endGame() {
   paused = false;
   bestScore = Math.max(bestScore, state.score);
   localStorage.setItem("od-catcher-best", String(bestScore));
+  saveLeaderboardScore(playerName || "Player", state.score);
   updateHud();
   startButton.textContent = "Again";
   startPanel.querySelector("p:not(.kicker)").textContent =
     `Тоглоом дууслаа. Чиний оноо: ${state.score}.`;
   startPanel.classList.remove("is-hidden");
-  openScoreDialog();
 }
 
 function draw() {
@@ -446,6 +464,11 @@ function loop(time) {
 }
 
 function startGame() {
+  if (!playerName) {
+    openNameDialog("Эхлээд нэрээ нэг удаа оруулна. Дараа нь автоматаар хадгалагдана.");
+    return;
+  }
+
   resetGame();
   running = true;
   startButton.textContent = "Start";
@@ -466,11 +489,11 @@ startButton.addEventListener("click", startGame);
 restartButton.addEventListener("click", startGame);
 pauseButton.addEventListener("click", togglePause);
 touchPause.addEventListener("click", togglePause);
-saveScoreButton.addEventListener("click", closeScoreDialog);
+saveNameButton.addEventListener("click", closeNameDialog);
 
 playerNameInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
-    closeScoreDialog();
+    closeNameDialog();
   }
 });
 
