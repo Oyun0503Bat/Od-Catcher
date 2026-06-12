@@ -32,6 +32,7 @@ const newGuessButton = document.querySelector("#newGuessButton");
 const guessMessage = document.querySelector("#guessMessage");
 const guessAttemptsEl = document.querySelector("#guessAttempts");
 const guessLeaderboardList = document.querySelector("#guessLeaderboardList");
+const guessHistoryList = document.querySelector("#guessHistoryList");
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
@@ -54,6 +55,7 @@ let activeGame = "menu";
 let pendingGame = "";
 let guessSecret = 0;
 let guessAttempts = 0;
+let guessHistory = [];
 let guessActive = false;
 let running = false;
 let paused = false;
@@ -387,14 +389,33 @@ function guessWinMessage(attempts) {
 function startGuessGame() {
   guessSecret = Math.floor(Math.random() * 10000) + 1;
   guessAttempts = 0;
+  guessHistory = [];
   guessActive = true;
   guessButton.textContent = "Taah";
   guessAttemptsEl.textContent = guessAttempts;
+  renderGuessHistory();
   guessInput.value = "";
   guessInput.disabled = false;
   guessInput.focus();
   guessMessage.textContent =
     "Bi 1-10000 hoorond neg too songoson. Chi oorigoo suga bish gedgee batlaarai.";
+}
+
+function renderGuessHistory() {
+  guessHistoryList.innerHTML = "";
+
+  if (guessHistory.length === 0) {
+    const empty = document.createElement("li");
+    empty.textContent = "Одоогоор тоо оруулаагүй";
+    guessHistoryList.append(empty);
+    return;
+  }
+
+  for (const item of guessHistory) {
+    const row = document.createElement("li");
+    row.textContent = `${item.attempt}. ${item.guess} - ${item.result}`;
+    guessHistoryList.append(row);
+  }
 }
 
 function submitGuess() {
@@ -414,6 +435,12 @@ function submitGuess() {
   guessAttemptsEl.textContent = guessAttempts;
 
   if (guess === guessSecret) {
+    guessHistory.push({
+      attempt: guessAttempts,
+      guess,
+      result: "taalaa",
+    });
+    renderGuessHistory();
     guessActive = false;
     guessInput.disabled = true;
     guessButton.textContent = "Again";
@@ -427,6 +454,12 @@ function submitGuess() {
       ? "Deeshee bro, ter too chini gazar door yavj bn."
       : "Baga too oruul, nar ruu nisgechlee.";
 
+  guessHistory.push({
+    attempt: guessAttempts,
+    guess,
+    result: guess < guessSecret ? "deeshee" : "bagasa",
+  });
+  renderGuessHistory();
   guessMessage.textContent = `${hint} ${guessAttemptMessage(guessAttempts)}`;
   guessInput.select();
 }
