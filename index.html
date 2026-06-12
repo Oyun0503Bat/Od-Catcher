@@ -31,7 +31,25 @@
         </div>
       </header>
 
-      <section class="game-layout" aria-label="Od Catcher game">
+      <section class="game-menu" id="gameMenu" aria-label="Game selection">
+        <div class="menu-copy">
+          <p class="kicker">Choose game</p>
+          <h1>2 Togloom</h1>
+          <p>Нэг нэрээрээ хоёр тоглоом тоглоод leaderboard дээр record-оо гарга.</p>
+        </div>
+        <div class="game-options">
+          <button class="game-option" data-game="catcher" type="button">
+            <span>Od Catcher</span>
+            <small>Од барьж, солироос бултана. Их оноо авбал leaderboard өснө.</small>
+          </button>
+          <button class="game-option" data-game="guess" type="button">
+            <span>Too Taah</span>
+            <small>1-10000 хоорондын тоог цөөн оролдлогоор таана.</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="game-layout game-view" id="catcherView" aria-label="Od Catcher game" hidden>
         <div class="stage-shell">
           <canvas
             id="gameCanvas"
@@ -61,20 +79,66 @@
             <span id="progressLabel">Дараагийн level: 10</span>
             <div><i id="progressBar"></i></div>
           </div>
+          <div class="leaderboard" aria-label="Leaderboard">
+            <h2>Leaderboard</h2>
+            <ol id="leaderboardList">
+              <li>Одоогоор оноо алга</li>
+            </ol>
+          </div>
           <div class="actions">
             <button id="pauseButton" type="button">Pause</button>
             <button id="restartButton" type="button">Restart</button>
+            <button class="back-button" id="catcherMenuButton" type="button">Menu</button>
           </div>
         </aside>
       </section>
 
-      <section class="touch-controls" aria-label="Touch controls">
+      <section class="touch-controls" id="touchControls" aria-label="Touch controls" hidden>
         <button class="control" data-move="-1" type="button" aria-label="Move left">&larr;</button>
         <button class="control pause-control" id="touchPause" type="button" aria-label="Pause">||</button>
         <button class="control" data-move="1" type="button" aria-label="Move right">&rarr;</button>
       </section>
+
+      <section class="guess-game game-view" id="guessView" aria-label="Too Taah game" hidden>
+        <div class="guess-panel">
+          <p class="kicker">Meme number game</p>
+          <h1>Too Taah</h1>
+          <p id="guessMessage">1-10000 хооронд нэг тоо сонгогдоно. Цөөн оролдлогоор таагаарай.</p>
+          <div class="guess-input-row">
+            <input id="guessInput" inputmode="numeric" type="number" min="1" max="10000" placeholder="Too oruul" />
+            <button class="primary-action" id="guessButton" type="button">Taah</button>
+          </div>
+          <div class="guess-actions">
+            <button id="newGuessButton" type="button">New number</button>
+            <button class="back-button" data-back-menu type="button">Menu</button>
+          </div>
+          <p class="guess-stat">Оролдлого: <strong id="guessAttempts">0</strong></p>
+        </div>
+        <aside class="side-panel" aria-label="Too Taah leaderboard">
+          <div class="leaderboard">
+            <h2>Too Taah Leaderboard</h2>
+            <ol id="guessLeaderboardList">
+              <li>Одоогоор record алга</li>
+            </ol>
+          </div>
+        </aside>
+      </section>
+
+      <div class="score-dialog" id="nameDialog" hidden>
+        <div class="score-box" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+          <p class="kicker">Player name</p>
+          <h2 id="nameTitle">Тоглох нэрээ оруул</h2>
+          <p id="nameDialogText">Энэ нэрээр leaderboard дээр оноо хадгалагдана.</p>
+          <label>
+            Нэр
+            <input id="playerNameInput" maxlength="16" type="text" value="Player" />
+          </label>
+          <button class="primary-action" id="saveNameButton" type="button">Start game</button>
+        </div>
+      </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
   </body>
 </html>
