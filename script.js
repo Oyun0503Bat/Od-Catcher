@@ -760,6 +760,16 @@ for (const button of backButtons) {
   button.addEventListener("click", showMenu);
 }
 
+document.addEventListener("click", (event) => {
+  const menuButton = event.target.closest("[data-back-menu], #catcherMenuButton");
+  if (!menuButton) {
+    return;
+  }
+
+  event.preventDefault();
+  showMenu();
+});
+
 playerNameInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     closeNameDialog();
