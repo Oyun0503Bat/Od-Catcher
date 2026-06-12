@@ -33,7 +33,6 @@ body {
 button,
 canvas {
   font: inherit;
-  -webkit-tap-highlight-color: transparent;
 }
 
 button {
@@ -94,7 +93,6 @@ button {
 .hud span,
 .metric,
 .meter,
-.leaderboard,
 .actions button {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -214,8 +212,7 @@ h1 {
 }
 
 .metric,
-.meter,
-.leaderboard {
+.meter {
   padding: 16px;
 }
 
@@ -249,24 +246,6 @@ h1 {
   background: linear-gradient(90deg, var(--teal), var(--gold), var(--coral));
 }
 
-.leaderboard h2 {
-  margin: 0 0 12px;
-  color: var(--gold);
-  font-size: 0.95rem;
-}
-
-.leaderboard ol {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding-left: 22px;
-}
-
-.leaderboard li {
-  color: var(--cream);
-  font-size: 0.92rem;
-}
-
 .actions {
   gap: 10px;
 }
@@ -287,69 +266,10 @@ h1 {
   background: var(--coral);
 }
 
-.touch-controls,
-.score-dialog {
+.touch-controls {
   display: none;
   justify-content: center;
   gap: 12px;
-}
-
-.touch-controls {
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.score-dialog {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  align-items: center;
-  padding: 20px;
-  background: rgba(16, 21, 16, 0.72);
-}
-
-.score-dialog:not([hidden]) {
-  display: flex;
-}
-
-.score-box {
-  width: min(420px, 100%);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 22px;
-  color: var(--cream);
-  background: #182018;
-  box-shadow: var(--shadow);
-}
-
-.score-box h2 {
-  margin: 0 0 10px;
-  font-size: 1.45rem;
-}
-
-.score-box p:not(.kicker) {
-  margin: 0 0 16px;
-  color: var(--muted);
-}
-
-.score-box label {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.score-box input {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 12px;
-  color: var(--ink);
-  background: var(--cream);
-  font: inherit;
 }
 
 .control {
@@ -362,10 +282,6 @@ h1 {
   background: var(--panel);
   font-size: 1.25rem;
   font-weight: 900;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
 }
 
 .pause-control {
@@ -404,7 +320,6 @@ h1 {
   }
 
   .meter,
-  .leaderboard,
   .actions {
     grid-column: 1 / -1;
   }
@@ -432,8 +347,7 @@ h1 {
   }
 
   .metric,
-  .meter,
-  .leaderboard {
+  .meter {
     padding: 13px;
   }
 

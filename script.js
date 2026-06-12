@@ -8,11 +8,6 @@ const bestScoreEl = document.querySelector("#bestScore");
 const comboEl = document.querySelector("#combo");
 const progressBar = document.querySelector("#progressBar");
 const progressLabel = document.querySelector("#progressLabel");
-const leaderboardList = document.querySelector("#leaderboardList");
-const nameDialog = document.querySelector("#nameDialog");
-const nameDialogText = document.querySelector("#nameDialogText");
-const playerNameInput = document.querySelector("#playerNameInput");
-const saveNameButton = document.querySelector("#saveNameButton");
 const startPanel = document.querySelector("#startPanel");
 const startButton = document.querySelector("#startButton");
 const pauseButton = document.querySelector("#pauseButton");
@@ -23,17 +18,7 @@ const moveButtons = document.querySelectorAll("[data-move]");
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const keys = new Set();
-const leaderboardKey = "od-catcher-leaderboard";
-const playerNameKey = "od-catcher-player-name";
-const SUPABASE_URL = "https://afzajceejxvqksrgrzvj.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_W0ZkOmwnIj0vzGUazDn0Rw_IFboFy0m";
-const onlineLeaderboard =
-  SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    : null;
 
-let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || "[]");
-let playerName = localStorage.getItem(playerNameKey) || "";
 let bestScore = Number(localStorage.getItem("od-catcher-best") || 0);
 let running = false;
 let paused = false;
@@ -85,91 +70,6 @@ function updateHud() {
   const progress = (state.score - previousLevel) / (nextLevel - previousLevel);
   progressBar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
   progressLabel.textContent = `Дараагийн level: ${Math.max(0, nextLevel - state.score)}`;
-}
-
-function renderLeaderboard() {
-  leaderboardList.innerHTML = "";
-
-  if (leaderboard.length === 0) {
-    const empty = document.createElement("li");
-    empty.textContent = "Одоогоор оноо алга";
-    leaderboardList.append(empty);
-    return;
-  }
-
-  for (const entry of leaderboard.slice(0, 5)) {
-    const item = document.createElement("li");
-    item.textContent = `${entry.name} - ${entry.score}`;
-    leaderboardList.append(item);
-  }
-}
-
-async function loadLeaderboard() {
-  if (!onlineLeaderboard) {
-    renderLeaderboard();
-    return;
-  }
-
-  const { data, error } = await onlineLeaderboard
-    .from("scores")
-    .select("name, score")
-    .order("score", { ascending: false })
-    .limit(5);
-
-  if (error) {
-    console.error("Leaderboard load failed:", error.message);
-    renderLeaderboard();
-    return;
-  }
-
-  leaderboard = data || [];
-  renderLeaderboard();
-}
-
-async function saveLeaderboardScore(name, score) {
-  const currentEntry = leaderboard.find(
-    (entry) => entry.name.toLowerCase() === name.toLowerCase(),
-  );
-
-  if (currentEntry && score <= currentEntry.score) {
-    return;
-  }
-
-  if (onlineLeaderboard) {
-    const { error } = await onlineLeaderboard
-      .from("scores")
-      .upsert({ name, score }, { onConflict: "name" });
-    if (error) {
-      console.error("Leaderboard save failed:", error.message);
-    }
-    await loadLeaderboard();
-    return;
-  }
-
-  leaderboard = leaderboard.filter(
-    (entry) => entry.name.toLowerCase() !== name.toLowerCase(),
-  );
-  leaderboard.push({ name, score });
-  leaderboard.sort((a, b) => b.score - a.score);
-  leaderboard = leaderboard.slice(0, 5);
-  localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
-  renderLeaderboard();
-}
-
-function openNameDialog(message = "Энэ нэрээр leaderboard дээр оноо хадгалагдана.") {
-  nameDialogText.textContent = message;
-  playerNameInput.value = playerName || "Player";
-  nameDialog.hidden = false;
-  playerNameInput.focus();
-  playerNameInput.select();
-}
-
-function closeNameDialog() {
-  const name = playerNameInput.value.trim().slice(0, 16) || "Player";
-  playerName = name;
-  localStorage.setItem(playerNameKey, playerName);
-  nameDialog.hidden = true;
-  startGame();
 }
 
 function createBackdrop() {
@@ -306,7 +206,6 @@ function endGame() {
   paused = false;
   bestScore = Math.max(bestScore, state.score);
   localStorage.setItem("od-catcher-best", String(bestScore));
-  saveLeaderboardScore(playerName || "Player", state.score);
   updateHud();
   startButton.textContent = "Again";
   startPanel.querySelector("p:not(.kicker)").textContent =
@@ -464,11 +363,6 @@ function loop(time) {
 }
 
 function startGame() {
-  if (!playerName) {
-    openNameDialog("Эхлээд нэрээ нэг удаа оруулна. Дараа нь автоматаар хадгалагдана.");
-    return;
-  }
-
   resetGame();
   running = true;
   startButton.textContent = "Start";
@@ -489,13 +383,6 @@ startButton.addEventListener("click", startGame);
 restartButton.addEventListener("click", startGame);
 pauseButton.addEventListener("click", togglePause);
 touchPause.addEventListener("click", togglePause);
-saveNameButton.addEventListener("click", closeNameDialog);
-
-playerNameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    closeNameDialog();
-  }
-});
 
 window.addEventListener("keydown", (event) => {
   keys.add(event.key);
@@ -515,21 +402,12 @@ window.addEventListener("keyup", (event) => {
 
 for (const button of moveButtons) {
   const value = button.dataset.move === "1" ? "ArrowRight" : "ArrowLeft";
-  button.addEventListener("contextmenu", (event) => event.preventDefault());
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    button.setPointerCapture(event.pointerId);
-    keys.add(value);
-  });
-  button.addEventListener("pointerup", (event) => {
-    event.preventDefault();
-    keys.delete(value);
-  });
+  button.addEventListener("pointerdown", () => keys.add(value));
+  button.addEventListener("pointerup", () => keys.delete(value));
   button.addEventListener("pointercancel", () => keys.delete(value));
   button.addEventListener("pointerleave", () => keys.delete(value));
 }
 
 createBackdrop();
 updateHud();
-loadLeaderboard();
 requestAnimationFrame(loop);
