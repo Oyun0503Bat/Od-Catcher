@@ -8,55 +8,18 @@ const bestScoreEl = document.querySelector("#bestScore");
 const comboEl = document.querySelector("#combo");
 const progressBar = document.querySelector("#progressBar");
 const progressLabel = document.querySelector("#progressLabel");
-const leaderboardList = document.querySelector("#leaderboardList");
-const gameMenu = document.querySelector("#gameMenu");
-const gameOptions = document.querySelectorAll("[data-game]");
-const catcherView = document.querySelector("#catcherView");
-const guessView = document.querySelector("#guessView");
-const touchControls = document.querySelector("#touchControls");
-const nameDialog = document.querySelector("#nameDialog");
-const nameDialogText = document.querySelector("#nameDialogText");
-const playerNameInput = document.querySelector("#playerNameInput");
-const saveNameButton = document.querySelector("#saveNameButton");
 const startPanel = document.querySelector("#startPanel");
 const startButton = document.querySelector("#startButton");
 const pauseButton = document.querySelector("#pauseButton");
 const restartButton = document.querySelector("#restartButton");
-const catcherMenuButton = document.querySelector("#catcherMenuButton");
 const touchPause = document.querySelector("#touchPause");
 const moveButtons = document.querySelectorAll("[data-move]");
-const backButtons = document.querySelectorAll("[data-back-menu]");
-const guessInput = document.querySelector("#guessInput");
-const guessButton = document.querySelector("#guessButton");
-const newGuessButton = document.querySelector("#newGuessButton");
-const guessMessage = document.querySelector("#guessMessage");
-const guessAttemptsEl = document.querySelector("#guessAttempts");
-const guessLeaderboardList = document.querySelector("#guessLeaderboardList");
-const guessHistoryList = document.querySelector("#guessHistoryList");
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const keys = new Set();
-const leaderboardKey = "od-catcher-leaderboard";
-const guessLeaderboardKey = "too-taah-leaderboard";
-const playerNameKey = "od-catcher-player-name";
-const SUPABASE_URL = "https://afzajceejxvqksrgrzvj.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_W0ZkOmwnIj0vzGUazDn0Rw_IFboFy0m";
-const onlineLeaderboard =
-  SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    : null;
 
-let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || "[]");
-let guessLeaderboard = JSON.parse(localStorage.getItem(guessLeaderboardKey) || "[]");
-let playerName = localStorage.getItem(playerNameKey) || "";
 let bestScore = Number(localStorage.getItem("od-catcher-best") || 0);
-let activeGame = "menu";
-let pendingGame = "";
-let guessSecret = 0;
-let guessAttempts = 0;
-let guessHistory = [];
-let guessActive = false;
 let running = false;
 let paused = false;
 let lastTime = 0;
@@ -107,361 +70,6 @@ function updateHud() {
   const progress = (state.score - previousLevel) / (nextLevel - previousLevel);
   progressBar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
   progressLabel.textContent = `Дараагийн level: ${Math.max(0, nextLevel - state.score)}`;
-}
-
-function renderLeaderboard() {
-  leaderboardList.innerHTML = "";
-
-  if (leaderboard.length === 0) {
-    const empty = document.createElement("li");
-    empty.textContent = "Одоогоор оноо алга";
-    leaderboardList.append(empty);
-    return;
-  }
-
-  for (const entry of leaderboard.slice(0, 5)) {
-    const item = document.createElement("li");
-    item.textContent = `${entry.name} - ${entry.score}`;
-    leaderboardList.append(item);
-  }
-}
-
-function renderGuessLeaderboard() {
-  guessLeaderboardList.innerHTML = "";
-
-  if (guessLeaderboard.length === 0) {
-    const empty = document.createElement("li");
-    empty.textContent = "Одоогоор record алга";
-    guessLeaderboardList.append(empty);
-    return;
-  }
-
-  for (const entry of guessLeaderboard.slice(0, 5)) {
-    const item = document.createElement("li");
-    item.textContent = `${entry.name} - ${entry.attempts} оролдлого`;
-    guessLeaderboardList.append(item);
-  }
-}
-
-async function loadLeaderboard() {
-  if (!onlineLeaderboard) {
-    renderLeaderboard();
-    return;
-  }
-
-  const { data, error } = await onlineLeaderboard
-    .from("scores")
-    .select("name, score")
-    .order("score", { ascending: false })
-    .limit(5);
-
-  if (error) {
-    console.error("Leaderboard load failed:", error.message);
-    renderLeaderboard();
-    return;
-  }
-
-  leaderboard = data || [];
-  renderLeaderboard();
-}
-
-async function loadGuessLeaderboard() {
-  if (!onlineLeaderboard) {
-    renderGuessLeaderboard();
-    return;
-  }
-
-  const { data, error } = await onlineLeaderboard
-    .from("guess_scores")
-    .select("name, attempts")
-    .order("attempts", { ascending: true })
-    .limit(5);
-
-  if (error) {
-    console.error("Too Taah leaderboard load failed:", error.message);
-    renderGuessLeaderboard();
-    return;
-  }
-
-  guessLeaderboard = data || [];
-  renderGuessLeaderboard();
-}
-
-async function saveLeaderboardScore(name, score) {
-  const currentEntry = leaderboard.find(
-    (entry) => entry.name.toLowerCase() === name.toLowerCase(),
-  );
-
-  if (currentEntry && score <= currentEntry.score) {
-    return;
-  }
-
-  if (onlineLeaderboard) {
-    const { data: existingScores, error: readError } = await onlineLeaderboard
-      .from("scores")
-      .select("id, score")
-      .eq("name", name)
-      .order("score", { ascending: false })
-      .limit(1);
-
-    if (readError) {
-      console.error("Leaderboard check failed:", readError.message);
-      return;
-    }
-
-    const existing = existingScores && existingScores[0];
-    if (existing && score <= existing.score) {
-      await loadLeaderboard();
-      return;
-    }
-
-    const request = existing
-      ? onlineLeaderboard.from("scores").update({ score }).eq("id", existing.id)
-      : onlineLeaderboard.from("scores").insert({ name, score });
-
-    const { error } = await request;
-    if (error) {
-      console.error("Leaderboard save failed:", error.message);
-    }
-    await loadLeaderboard();
-    return;
-  }
-
-  leaderboard = leaderboard.filter(
-    (entry) => entry.name.toLowerCase() !== name.toLowerCase(),
-  );
-  leaderboard.push({ name, score });
-  leaderboard.sort((a, b) => b.score - a.score);
-  leaderboard = leaderboard.slice(0, 5);
-  localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
-  renderLeaderboard();
-}
-
-async function saveGuessScore(name, attempts) {
-  const currentEntry = guessLeaderboard.find(
-    (entry) => entry.name.toLowerCase() === name.toLowerCase(),
-  );
-
-  if (currentEntry && attempts >= currentEntry.attempts) {
-    return;
-  }
-
-  if (onlineLeaderboard) {
-    const { data: existingScores, error: readError } = await onlineLeaderboard
-      .from("guess_scores")
-      .select("id, attempts")
-      .eq("name", name)
-      .order("attempts", { ascending: true })
-      .limit(1);
-
-    if (readError) {
-      console.error("Too Taah leaderboard check failed:", readError.message);
-      return;
-    }
-
-    const existing = existingScores && existingScores[0];
-    if (existing && attempts >= existing.attempts) {
-      await loadGuessLeaderboard();
-      return;
-    }
-
-    const request = existing
-      ? onlineLeaderboard.from("guess_scores").update({ attempts }).eq("id", existing.id)
-      : onlineLeaderboard.from("guess_scores").insert({ name, attempts });
-
-    const { error } = await request;
-    if (error) {
-      console.error("Too Taah leaderboard save failed:", error.message);
-    }
-    await loadGuessLeaderboard();
-    return;
-  }
-
-  guessLeaderboard = guessLeaderboard.filter(
-    (entry) => entry.name.toLowerCase() !== name.toLowerCase(),
-  );
-  guessLeaderboard.push({ name, attempts });
-  guessLeaderboard.sort((a, b) => a.attempts - b.attempts);
-  guessLeaderboard = guessLeaderboard.slice(0, 5);
-  localStorage.setItem(guessLeaderboardKey, JSON.stringify(guessLeaderboard));
-  renderGuessLeaderboard();
-}
-
-function openNameDialog(message = "Энэ нэрээр leaderboard дээр оноо хадгалагдана.") {
-  nameDialogText.textContent = message;
-  playerNameInput.value = playerName || "Player";
-  nameDialog.hidden = false;
-  playerNameInput.focus();
-  playerNameInput.select();
-}
-
-function closeNameDialog() {
-  const name = playerNameInput.value.trim().slice(0, 16) || "Player";
-  const game = pendingGame || "catcher";
-  playerName = name;
-  localStorage.setItem(playerNameKey, playerName);
-  nameDialog.hidden = true;
-  pendingGame = "";
-  selectGame(game);
-  if (game === "catcher") {
-    startGame();
-  }
-}
-
-function ensurePlayerName(game) {
-  if (playerName) {
-    return true;
-  }
-
-  pendingGame = game;
-  openNameDialog("Эхлээд нэрээ нэг удаа оруулна. Дараа нь автоматаар хадгалагдана.");
-  return false;
-}
-
-function showMenu() {
-  activeGame = "menu";
-  running = false;
-  paused = false;
-  keys.clear();
-  gameMenu.hidden = false;
-  catcherView.hidden = true;
-  guessView.hidden = true;
-  touchControls.hidden = true;
-}
-
-function selectGame(game) {
-  if (!ensurePlayerName(game)) {
-    return;
-  }
-
-  activeGame = game;
-  gameMenu.hidden = true;
-  catcherView.hidden = game !== "catcher";
-  guessView.hidden = game !== "guess";
-  touchControls.hidden = game !== "catcher";
-
-  if (game === "catcher") {
-    resetGame();
-    startPanel.querySelector("p:not(.kicker)").textContent =
-      "Унаж буй оддыг цуглуулаад солируудаас бултаарай.";
-    startPanel.classList.remove("is-hidden");
-    loadLeaderboard();
-  } else {
-    running = false;
-    paused = false;
-    startGuessGame();
-    loadGuessLeaderboard();
-  }
-}
-
-function guessAttemptMessage(attempts) {
-  if (attempts <= 5) {
-    return "Odoohondoo gaigui l yavj bn.";
-  }
-  if (attempts <= 10) {
-    return "Taaj bgaa yu, esvel random darj bgaa yu?";
-  }
-  if (attempts <= 20) {
-    return "Minii emee ch chamaas hurdan taah bh.";
-  }
-  if (attempts <= 40) {
-    return "Too chamaas zugtaagaad bga yum shig bn.";
-  }
-  if (attempts <= 70) {
-    return "Ene togloomiig duusgahaas umnu bi tetgevert garah ni.";
-  }
-  return "Bro leaderboard bish Guinness-iin record ruu yavj bn.";
-}
-
-function guessWinMessage(attempts) {
-  if (attempts <= 5) {
-    return "WTF? Chi hacker yum uu? Leaderboard chamd murguj bn.";
-  }
-  if (attempts <= 15) {
-    return "Za gaigui, tarhi ajilladag yum bn.";
-  }
-  if (attempts <= 30) {
-    return "Taalaa, gehdee sain ni bish.";
-  }
-  return "Etsest ni olchihloo. Too ooroo chamaig uruwdsiin bish biz?";
-}
-
-function startGuessGame() {
-  guessSecret = Math.floor(Math.random() * 10000) + 1;
-  guessAttempts = 0;
-  guessHistory = [];
-  guessActive = true;
-  guessButton.textContent = "Taah";
-  guessAttemptsEl.textContent = guessAttempts;
-  renderGuessHistory();
-  guessInput.value = "";
-  guessInput.disabled = false;
-  guessInput.focus();
-  guessMessage.textContent =
-    "Bi 1-10000 hoorond neg too songoson. Chi oorigoo suga bish gedgee batlaarai.";
-}
-
-function renderGuessHistory() {
-  guessHistoryList.innerHTML = "";
-
-  if (guessHistory.length === 0) {
-    const empty = document.createElement("li");
-    empty.textContent = "Одоогоор тоо оруулаагүй";
-    guessHistoryList.append(empty);
-    return;
-  }
-
-  for (const item of guessHistory) {
-    const row = document.createElement("li");
-    row.textContent = `${item.attempt}. ${item.guess} - ${item.result}`;
-    guessHistoryList.append(row);
-  }
-}
-
-function submitGuess() {
-  if (!guessActive) {
-    startGuessGame();
-    return;
-  }
-
-  const guess = Number(guessInput.value);
-  if (!Number.isInteger(guess) || guess < 1 || guess > 10000) {
-    guessMessage.textContent = "1-10000 hoorond too bich bro.";
-    guessInput.select();
-    return;
-  }
-
-  guessAttempts += 1;
-  guessAttemptsEl.textContent = guessAttempts;
-
-  if (guess === guessSecret) {
-    guessHistory.push({
-      attempt: guessAttempts,
-      guess,
-      result: "taalaa",
-    });
-    renderGuessHistory();
-    guessActive = false;
-    guessInput.disabled = true;
-    guessButton.textContent = "Again";
-    guessMessage.textContent = `Taalaa! ${guessAttempts} oroldlogoor taalaa. ${guessWinMessage(guessAttempts)}`;
-    saveGuessScore(playerName || "Player", guessAttempts);
-    return;
-  }
-
-  const hint =
-    guess < guessSecret
-      ? "Deeshee bro, ter too chini gazar door yavj bn."
-      : "Baga too oruul, nar ruu nisgechlee.";
-
-  guessHistory.push({
-    attempt: guessAttempts,
-    guess,
-    result: guess < guessSecret ? "deeshee" : "bagasa",
-  });
-  renderGuessHistory();
-  guessMessage.textContent = `${hint} ${guessAttemptMessage(guessAttempts)}`;
-  guessInput.select();
 }
 
 function createBackdrop() {
@@ -598,7 +206,6 @@ function endGame() {
   paused = false;
   bestScore = Math.max(bestScore, state.score);
   localStorage.setItem("od-catcher-best", String(bestScore));
-  saveLeaderboardScore(playerName || "Player", state.score);
   updateHud();
   startButton.textContent = "Again";
   startPanel.querySelector("p:not(.kicker)").textContent =
@@ -756,10 +363,6 @@ function loop(time) {
 }
 
 function startGame() {
-  if (!ensurePlayerName("catcher")) {
-    return;
-  }
-
   resetGame();
   running = true;
   startButton.textContent = "Start";
@@ -780,46 +383,8 @@ startButton.addEventListener("click", startGame);
 restartButton.addEventListener("click", startGame);
 pauseButton.addEventListener("click", togglePause);
 touchPause.addEventListener("click", togglePause);
-catcherMenuButton.addEventListener("click", showMenu);
-saveNameButton.addEventListener("click", closeNameDialog);
-guessButton.addEventListener("click", submitGuess);
-newGuessButton.addEventListener("click", startGuessGame);
-
-for (const option of gameOptions) {
-  option.addEventListener("click", () => selectGame(option.dataset.game));
-}
-
-for (const button of backButtons) {
-  button.addEventListener("click", showMenu);
-}
-
-document.addEventListener("click", (event) => {
-  const menuButton = event.target.closest("[data-back-menu], #catcherMenuButton");
-  if (!menuButton) {
-    return;
-  }
-
-  event.preventDefault();
-  showMenu();
-});
-
-playerNameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    closeNameDialog();
-  }
-});
-
-guessInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    submitGuess();
-  }
-});
 
 window.addEventListener("keydown", (event) => {
-  if (activeGame !== "catcher" || event.target.tagName === "INPUT") {
-    return;
-  }
-
   keys.add(event.key);
   if (event.key === " " || event.key === "Enter") {
     event.preventDefault();
@@ -832,31 +397,17 @@ window.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("keyup", (event) => {
-  if (activeGame !== "catcher") {
-    return;
-  }
-
   keys.delete(event.key);
 });
 
 for (const button of moveButtons) {
   const value = button.dataset.move === "1" ? "ArrowRight" : "ArrowLeft";
-  button.addEventListener("contextmenu", (event) => event.preventDefault());
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    button.setPointerCapture(event.pointerId);
-    keys.add(value);
-  });
-  button.addEventListener("pointerup", (event) => {
-    event.preventDefault();
-    keys.delete(value);
-  });
+  button.addEventListener("pointerdown", () => keys.add(value));
+  button.addEventListener("pointerup", () => keys.delete(value));
   button.addEventListener("pointercancel", () => keys.delete(value));
   button.addEventListener("pointerleave", () => keys.delete(value));
 }
 
 createBackdrop();
 updateHud();
-renderGuessLeaderboard();
-showMenu();
 requestAnimationFrame(loop);
