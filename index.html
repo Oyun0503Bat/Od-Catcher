@@ -24,14 +24,78 @@
           <span class="brand-mark">OC</span>
           <span>Od Catcher</span>
         </a>
+        <div class="language-switch" aria-label="Language">
+          <button class="lang-button is-active" data-lang="mn" type="button">MN</button>
+          <button class="lang-button" data-lang="en" type="button">EN</button>
+        </div>
         <div class="hud" aria-label="Game stats">
-          <span>Оноо <strong id="score">0</strong></span>
+          <span><span data-i18n="scoreLabel">Оноо</span> <strong id="score">0</strong></span>
           <span>Level <strong id="level">1</strong></span>
-          <span>Амь <strong id="lives">3</strong></span>
+          <span><span data-i18n="livesLabel">Амь</span> <strong id="lives">3</strong></span>
         </div>
       </header>
 
-      <section class="game-layout" aria-label="Od Catcher game">
+      <section class="game-menu" id="gameMenu" aria-label="Game selection">
+        <div class="menu-copy">
+          <p class="kicker">Game hub</p>
+          <h1>Play Zone</h1>
+          <p data-i18n="menuSubtitle">Тоглоомоо сонгоод leaderboard дээр record-оо гарга.</p>
+        </div>
+        <div class="game-options">
+          <button class="game-option tile-catcher tile-wide" data-game="catcher" type="button">
+            <span class="tile-art">OD</span>
+            <strong>Od Catcher</strong>
+            <small data-i18n="catcherTileDesc">Од барьж, солироос булт.</small>
+          </button>
+          <button class="game-option tile-guess tile-wide" data-game="guess" type="button">
+            <span class="tile-art">?</span>
+            <strong>Too Taah</strong>
+            <small data-i18n="guessTileDesc">Цөөн оролдлогоор тоог ол.</small>
+          </button>
+          <button class="game-option tile-soon tile-orange" type="button" disabled>
+            <span class="tile-art">VS</span>
+            <strong>Duel</strong>
+          </button>
+          <button class="game-option tile-soon tile-green" type="button" disabled>
+            <span class="tile-art">11</span>
+            <strong>Football</strong>
+          </button>
+          <button class="game-option tile-soon tile-purple" type="button" disabled>
+            <span class="tile-art">RUN</span>
+            <strong>Runner</strong>
+          </button>
+          <button class="game-option tile-soon tile-red" type="button" disabled>
+            <span class="tile-art">BOOM</span>
+            <strong>Bomb</strong>
+          </button>
+          <button class="game-option tile-soon tile-blue" type="button" disabled>
+            <span class="tile-art">CAR</span>
+            <strong>Race</strong>
+          </button>
+          <button class="game-option tile-soon tile-yellow" type="button" disabled>
+            <span class="tile-art">XO</span>
+            <strong>Tic Tac</strong>
+          </button>
+          <button class="game-option tile-soon tile-pink" type="button" disabled>
+            <span class="tile-art">CAT</span>
+            <strong>Pets</strong>
+          </button>
+          <button class="game-option tile-soon tile-cyan" type="button" disabled>
+            <span class="tile-art">2048</span>
+            <strong>Blocks</strong>
+          </button>
+          <button class="game-option tile-soon tile-black" type="button" disabled>
+            <span class="tile-art">BOX</span>
+            <strong>Puzzle</strong>
+          </button>
+          <button class="game-option tile-soon tile-lime" type="button" disabled>
+            <span class="tile-art">+</span>
+            <strong>More</strong>
+          </button>
+        </div>
+      </section>
+
+      <section class="game-layout game-view" id="catcherView" aria-label="Od Catcher game" hidden>
         <div class="stage-shell">
           <canvas
             id="gameCanvas"
@@ -43,14 +107,14 @@
           <div class="start-panel" id="startPanel">
             <p class="kicker">Browser game</p>
             <h1>Od Catcher</h1>
-            <p>Унаж буй оддыг цуглуулаад солируудаас бултаарай.</p>
+            <p data-i18n="catcherStartText">Унаж буй оддыг цуглуулаад солируудаас бултаарай.</p>
             <button class="primary-action" id="startButton" type="button">Start</button>
           </div>
         </div>
 
         <aside class="side-panel" aria-label="Game details">
           <div class="metric">
-            <span>Дээд оноо</span>
+              <span data-i18n="bestScoreLabel">Дээд оноо</span>
             <strong id="bestScore">0</strong>
           </div>
           <div class="metric">
@@ -61,20 +125,72 @@
             <span id="progressLabel">Дараагийн level: 10</span>
             <div><i id="progressBar"></i></div>
           </div>
+          <div class="leaderboard" aria-label="Leaderboard">
+            <h2>Leaderboard</h2>
+            <ol id="leaderboardList">
+              <li data-i18n="noScores">Одоогоор оноо алга</li>
+            </ol>
+          </div>
           <div class="actions">
             <button id="pauseButton" type="button">Pause</button>
             <button id="restartButton" type="button">Restart</button>
+            <button class="back-button" id="catcherMenuButton" data-back-menu type="button">Menu</button>
           </div>
         </aside>
       </section>
 
-      <section class="touch-controls" aria-label="Touch controls">
+      <section class="touch-controls" id="touchControls" aria-label="Touch controls" hidden>
         <button class="control" data-move="-1" type="button" aria-label="Move left">&larr;</button>
         <button class="control pause-control" id="touchPause" type="button" aria-label="Pause">||</button>
         <button class="control" data-move="1" type="button" aria-label="Move right">&rarr;</button>
       </section>
+
+      <section class="guess-game game-view" id="guessView" aria-label="Too Taah game" hidden>
+        <div class="guess-panel">
+          <p class="kicker">Meme number game</p>
+          <h1>Too Taah</h1>
+          <p id="guessMessage">1-10000 хооронд нэг тоо сонгогдоно. Цөөн оролдлогоор таагаарай.</p>
+          <div class="guess-input-row">
+            <input id="guessInput" inputmode="numeric" type="number" min="1" max="10000" placeholder="Too oruul" />
+            <button class="primary-action" id="guessButton" type="button" data-i18n="guessButton">Taah</button>
+          </div>
+          <div class="guess-actions">
+            <button id="newGuessButton" type="button" data-i18n="newNumber">New number</button>
+            <button class="back-button" data-back-menu type="button">Menu</button>
+          </div>
+          <p class="guess-stat"><span data-i18n="attemptsLabel">Оролдлого</span>: <strong id="guessAttempts">0</strong></p>
+          <div class="guess-history" aria-label="Too taasan tuuh">
+            <h2 data-i18n="guessHistoryTitle">Таасан түүх</h2>
+            <ol id="guessHistoryList">
+              <li data-i18n="noGuesses">Одоогоор тоо оруулаагүй</li>
+            </ol>
+          </div>
+        </div>
+        <aside class="side-panel" aria-label="Too Taah leaderboard">
+          <div class="leaderboard">
+            <h2>Too Taah Leaderboard</h2>
+            <ol id="guessLeaderboardList">
+              <li>Одоогоор record алга</li>
+            </ol>
+          </div>
+        </aside>
+      </section>
+
+      <div class="score-dialog" id="nameDialog" hidden>
+        <div class="score-box" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+          <p class="kicker">Player name</p>
+          <h2 id="nameTitle" data-i18n="nameTitle">Тоглох нэрээ оруул</h2>
+          <p id="nameDialogText">Энэ нэрээр leaderboard дээр оноо хадгалагдана.</p>
+          <label>
+            <span data-i18n="nameLabel">Нэр</span>
+            <input id="playerNameInput" maxlength="16" type="text" value="Player" />
+          </label>
+          <button class="primary-action" id="saveNameButton" type="button">Start game</button>
+        </div>
+      </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
   </body>
 </html>
