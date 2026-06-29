@@ -171,6 +171,27 @@ function resetGame() {
   updateHud();
 }
 
+function setLanguage(lang) {
+  currentLang = translations[lang] ? lang : "mn";
+  localStorage.setItem(langKey, currentLang);
+  document.documentElement.lang = currentLang === "mn" ? "mn" : "en";
+
+  for (const node of i18nNodes) {
+    node.textContent = t(node.dataset.i18n);
+  }
+
+  for (const button of langButtons) {
+    button.classList.toggle("is-active", button.dataset.lang === currentLang);
+  }
+
+  guessInput.placeholder = t("guessPlaceholder");
+  nameDialogText.textContent = t("nameHelp");
+  updateHud();
+  renderLeaderboard();
+  renderGuessLeaderboard();
+  renderGuessHistory();
+}
+
 function updateHud() {
   scoreEl.textContent = state.score;
   levelEl.textContent = state.level;
@@ -182,7 +203,7 @@ function updateHud() {
   const previousLevel = (state.level - 1) * 10;
   const progress = (state.score - previousLevel) / (nextLevel - previousLevel);
   progressBar.style.width = `${Math.max(0, Math.min(1, progress)) * 100}%`;
-  progressLabel.textContent = `Дараагийн level: ${Math.max(0, nextLevel - state.score)}`;
+  progressLabel.textContent = `${t("nextLevel")}: ${Math.max(0, nextLevel - state.score)}`;
 }
 
 function renderLeaderboard() {
@@ -190,7 +211,7 @@ function renderLeaderboard() {
 
   if (leaderboard.length === 0) {
     const empty = document.createElement("li");
-    empty.textContent = "Одоогоор оноо алга";
+    empty.textContent = t("noScores");
     leaderboardList.append(empty);
     return;
   }
@@ -207,7 +228,7 @@ function renderGuessLeaderboard() {
 
   if (guessLeaderboard.length === 0) {
     const empty = document.createElement("li");
-    empty.textContent = "Одоогоор record алга";
+    empty.textContent = t("noScores");
     guessLeaderboardList.append(empty);
     return;
   }
@@ -363,7 +384,7 @@ async function saveGuessScore(name, attempts) {
   renderGuessLeaderboard();
 }
 
-function openNameDialog(message = "Энэ нэрээр leaderboard дээр оноо хадгалагдана.") {
+function openNameDialog(message = t("nameHelp")) {
   nameDialogText.textContent = message;
   playerNameInput.value = playerName || "Player";
   nameDialog.hidden = false;
@@ -390,7 +411,7 @@ function ensurePlayerName(game) {
   }
 
   pendingGame = game;
-  openNameDialog("Эхлээд нэрээ нэг удаа оруулна. Дараа нь автоматаар хадгалагдана.");
+  openNameDialog(t("nameFirst"));
   return false;
 }
 
@@ -419,7 +440,7 @@ function selectGame(game) {
   if (game === "catcher") {
     resetGame();
     startPanel.querySelector("p:not(.kicker)").textContent =
-      "Унаж буй оддыг цуглуулаад солируудаас бултаарай.";
+      t("catcherStart");
     startPanel.classList.remove("is-hidden");
     loadLeaderboard();
   } else {
@@ -467,14 +488,13 @@ function startGuessGame() {
   guessAttempts = 0;
   guessHistory = [];
   guessActive = true;
-  guessButton.textContent = "Taah";
+  guessButton.textContent = t("guessButton");
   guessAttemptsEl.textContent = guessAttempts;
   renderGuessHistory();
   guessInput.value = "";
   guessInput.disabled = false;
   guessInput.focus();
-  guessMessage.textContent =
-    "Bi 1-10000 hoorond neg too songoson. Chi oorigoo suga bish gedgee batlaarai.";
+  guessMessage.textContent = t("guessIntro");
 }
 
 function renderGuessHistory() {
@@ -482,7 +502,7 @@ function renderGuessHistory() {
 
   if (guessHistory.length === 0) {
     const empty = document.createElement("li");
-    empty.textContent = "Одоогоор тоо оруулаагүй";
+    empty.textContent = t("noGuesses");
     guessHistoryList.append(empty);
     return;
   }
@@ -502,7 +522,7 @@ function submitGuess() {
 
   const guess = Number(guessInput.value);
   if (!Number.isInteger(guess) || guess < 1 || guess > 10000) {
-    guessMessage.textContent = "1-10000 hoorond too bich bro.";
+    guessMessage.textContent = t("guessInvalid");
     guessInput.select();
     return;
   }
@@ -514,26 +534,26 @@ function submitGuess() {
     guessHistory.push({
       attempt: guessAttempts,
       guess,
-      result: "taalaa",
+      result: t("correctHistory"),
     });
     renderGuessHistory();
     guessActive = false;
     guessInput.disabled = true;
     guessButton.textContent = "Again";
-    guessMessage.textContent = `Taalaa! ${guessAttempts} oroldlogoor taalaa. ${guessWinMessage(guessAttempts)}`;
+    guessMessage.textContent = `${t("guessWinPrefix")} ${guessAttempts} ${t("guessWinSuffix")} ${guessWinMessage(guessAttempts)}`;
     saveGuessScore(playerName || "Player", guessAttempts);
     return;
   }
 
   const hint =
     guess < guessSecret
-      ? "Deeshee bro, ter too chini gazar door yavj bn."
-      : "Baga too oruul, nar ruu nisgechlee.";
+      ? t("guessHigh")
+      : t("guessLow");
 
   guessHistory.push({
     attempt: guessAttempts,
     guess,
-    result: guess < guessSecret ? "deeshee" : "bagasa",
+    result: guess < guessSecret ? t("tooHighHistory") : t("tooLowHistory"),
   });
   renderGuessHistory();
   guessMessage.textContent = `${hint} ${guessAttemptMessage(guessAttempts)}`;
@@ -678,7 +698,7 @@ function endGame() {
   updateHud();
   startButton.textContent = "Again";
   startPanel.querySelector("p:not(.kicker)").textContent =
-    `Тоглоом дууслаа. Чиний оноо: ${state.score}.`;
+    `${t("gameOver")} ${state.score}.`;
   startPanel.classList.remove("is-hidden");
 }
 
@@ -840,7 +860,7 @@ function startGame() {
   running = true;
   startButton.textContent = "Start";
   startPanel.querySelector("p:not(.kicker)").textContent =
-    "Унаж буй оддыг цуглуулаад солируудаас бултаарай.";
+    t("catcherStart");
   startPanel.classList.add("is-hidden");
 }
 
@@ -860,6 +880,10 @@ catcherMenuButton.addEventListener("click", showMenu);
 saveNameButton.addEventListener("click", closeNameDialog);
 guessButton.addEventListener("click", submitGuess);
 newGuessButton.addEventListener("click", startGuessGame);
+
+for (const button of langButtons) {
+  button.addEventListener("click", () => setLanguage(button.dataset.lang));
+}
 
 for (const option of gameOptions) {
   option.addEventListener("click", () => selectGame(option.dataset.game));
@@ -932,7 +956,6 @@ for (const button of moveButtons) {
 }
 
 createBackdrop();
-updateHud();
-renderGuessLeaderboard();
+setLanguage(currentLang);
 showMenu();
 requestAnimationFrame(loop);
